@@ -214,6 +214,21 @@ async function openTable(table) {
 
 document.getElementById("backToTables").addEventListener("click", () => loadTables());
 
+async function releaseTable() {
+  const doRelease = async () => {
+    await setDoc(docRef("orders", state.currentOrder.id), { status: "cancelada" }, { merge: true });
+    await updateDoc(docRef("tables", state.currentTable.id), { status: "libre" });
+    toast("Mesa liberada", "info");
+    loadTables();
+  };
+  if (state.currentOrder.items.length === 0) {
+    doRelease();
+  } else {
+    requireAnyPin(doRelease);
+  }
+}
+document.getElementById("releaseTableBtn").addEventListener("click", releaseTable);
+
 /* ============================================================
    CATEGORÍAS Y PRODUCTOS
    ============================================================ */
@@ -493,6 +508,21 @@ function requireAdminPin(onSuccess) {
   document.getElementById("confirmAdminPin").onclick = async () => {
     const pin = document.getElementById("adminPinInput").value;
     const snap = await getDocs(query(col("users"), where("pin", "==", pin), where("role", "==", "admin_contador")));
+    if (snap.empty) { toast("PIN incorrecto", "error"); return; }
+    closeModal("modalAdminPin");
+    onSuccess();
+  };
+}
+
+// Igual que requireAdminPin, pero acepta el PIN de CUALQUIER usuario
+// activo (mesero, cajero o admin) — para acciones de menor riesgo,
+// como liberar una mesa abierta por error.
+function requireAnyPin(onSuccess) {
+  document.getElementById("adminPinInput").value = "";
+  openModal("modalAdminPin");
+  document.getElementById("confirmAdminPin").onclick = async () => {
+    const pin = document.getElementById("adminPinInput").value;
+    const snap = await getDocs(query(col("users"), where("pin", "==", pin), where("active", "==", true)));
     if (snap.empty) { toast("PIN incorrecto", "error"); return; }
     closeModal("modalAdminPin");
     onSuccess();
