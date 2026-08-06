@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>Bahía 1525 · Del amanecer al brindis</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/tailwind.css" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="bg-navydeep text-cream font-body min-h-screen">
+
+  <!-- TOAST -->
+  <div id="toast" class="hidden fixed top-5 right-5 z-50 px-5 py-3 rounded-xl border text-sm font-medium"></div>
+
+  <!-- BARRA SUPERIOR -->
+  <header id="topbar" class="hidden sticky top-0 z-40 flex items-center justify-between px-6 py-3
+                              bg-navypanel/80 backdrop-blur-md border-b border-gold/15">
+    <div class="flex items-center gap-3">
+      <span class="font-display text-2xl tracking-widest text-goldsoft">BAHÍA</span>
+      <span class="font-display text-lg text-gold">1525</span>
+    </div>
+    <nav id="mainNav" class="flex gap-2 text-sm uppercase tracking-wide"></nav>
+    <div class="flex items-center gap-4 text-sm">
+      <span id="userBadge" class="text-gold/80"></span>
+      <button id="logoutBtn" class="px-3 py-1.5 rounded-full border border-gold/30 hover:bg-gold/10 transition">Salir</button>
+    </div>
+  </header>
+
+  <main id="app" class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- LOGIN -->
+    <section id="screen-login" class="min-h-[85vh] flex items-center justify-center">
+      <div class="w-full max-w-sm text-center">
+        <p class="font-display text-5xl tracking-[0.2em] text-goldsoft mb-1">BAHÍA</p>
+        <p class="font-display text-3xl tracking-[0.3em] text-gold mb-2">1525</p>
+        <p class="text-xs uppercase tracking-[0.25em] text-cream/50 mb-10">Del amanecer al brindis</p>
+
+        <div class="glass p-8 rounded-3xl">
+          <p class="text-sm text-cream/70 mb-4">Ingresa tu PIN de acceso</p>
+          <div id="pinDisplay" class="flex justify-center gap-3 mb-6">
+            <span class="pin-dot"></span><span class="pin-dot"></span>
+            <span class="pin-dot"></span><span class="pin-dot"></span>
+          </div>
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <!-- keypad se genera en JS -->
+          </div>
+          <p id="loginError" class="hidden text-danger text-xs mt-2">PIN incorrecto o usuario inactivo</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- POS: MESAS -->
+    <section id="screen-tables" class="hidden">
+      <h2 class="section-title">Salón</h2>
+      <div id="tablesGrid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4 mt-4"></div>
+    </section>
+
+    <!-- POS: VENTA -->
+    <section id="screen-pos" class="hidden grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <button id="backToTables" class="text-gold/70 text-sm hover:text-gold">&larr; Mesas</button>
+          <h2 id="posTableLabel" class="font-display text-xl text-goldsoft"></h2>
+          <button id="releaseTableBtn" class="text-danger/70 text-sm hover:text-danger">Liberar mesa</button>
+        </div>
+        <div id="categoryTabs" class="flex gap-2 mb-5 overflow-x-auto pb-1"></div>
+        <div id="productsGrid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+      </div>
+
+      <aside class="glass rounded-2xl p-4 flex flex-col h-fit sticky top-24">
+        <h3 class="font-display text-lg text-goldsoft mb-3">Pedido actual</h3>
+        <div id="cartItems" class="flex-1 space-y-3 max-h-[50vh] overflow-y-auto pr-1"></div>
+        <div class="border-t border-gold/15 mt-4 pt-4 space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-cream/60">Subtotal</span><span id="cartSubtotal">$0</span></div>
+        </div>
+        <div class="mt-4 space-y-2">
+          <button id="sendKitchenBtn" class="btn-outline w-full">Enviar a cocina</button>
+          <button id="chargeBtn" class="btn-primary w-full">Cobrar</button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- CIERRE DE CAJA -->
+    <section id="screen-shift" class="hidden max-w-2xl mx-auto">
+      <h2 class="section-title">Caja</h2>
+      <div id="shiftContent" class="glass rounded-2xl p-6 mt-4"></div>
+    </section>
+
+    <!-- EGRESOS -->
+    <section id="screen-expenses" class="hidden max-w-xl mx-auto">
+      <h2 class="section-title">Registrar egreso</h2>
+      <form id="expenseForm" class="glass rounded-2xl p-6 mt-4 space-y-4">
+        <div>
+          <label class="label">Monto</label>
+          <input type="number" id="expAmount" required class="input" placeholder="0" />
+        </div>
+        <div>
+          <label class="label">Categoría</label>
+          <select id="expCategory" class="input">
+            <option>Insumos frescos</option>
+            <option>Mantenimiento</option>
+            <option>Domicilios / transporte</option>
+            <option>Pagos menores</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Método de salida</label>
+          <select id="expMethod" class="input">
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Descripción</label>
+          <input type="text" id="expDescription" class="input" placeholder="Ej. Compra de limones y menta" />
+        </div>
+        <button type="submit" class="btn-primary w-full">Guardar egreso</button>
+      </form>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="screen-admin" class="hidden space-y-10">
+      <div>
+        <div class="flex items-center justify-between">
+          <h2 class="section-title">Inventario &amp; productos</h2>
+          <button id="newProductBtn" class="btn-outline">+ Nuevo producto</button>
+        </div>
+        <div id="lowStockBanner" class="hidden mt-4 p-4 rounded-xl bg-warn/10 border border-warn/30 text-warn text-sm"></div>
+        <div id="adminProductsTable" class="mt-4 glass rounded-2xl overflow-hidden"></div>
+      </div>
+
+      <div>
+        <h2 class="section-title">Historial de turnos</h2>
+        <div id="shiftHistoryTable" class="mt-4 glass rounded-2xl overflow-hidden"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: NUEVO/EDITAR PRODUCTO -->
+  <div id="modalProduct" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
+    <div class="glass rounded-2xl p-6 w-full max-w-md">
+      <h3 class="font-display text-xl text-goldsoft mb-4">Nuevo producto</h3>
+      <form id="productForm" class="space-y-3">
+        <input type="text" id="pName" placeholder="Nombre" class="input" required />
+        <select id="pCategory" class="input"></select>
+        <input type="number" id="pPrice" placeholder="Precio de venta" class="input" required />
+        <input type="number" id="pCost" placeholder="Costo" class="input" />
+        <label class="flex items-center gap-2 text-sm text-cream/70">
+          <input type="checkbox" id="pTracksStock" /> Controla stock directo (sin receta)
+        </label>
+        <input type="number" id="pStock" placeholder="Stock inicial" class="input hidden" />
+        <input type="number" id="pMinStock" placeholder="Alerta stock mínimo" class="input hidden" />
+        <div class="flex gap-2 pt-2">
+          <button type="button" id="cancelProduct" class="btn-outline flex-1">Cancelar</button>
+          <button type="submit" class="btn-primary flex-1">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: COBRAR -->
+  <div id="modalCheckout" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
+    <div class="glass rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <h3 class="font-display text-xl text-goldsoft mb-4">Cobrar cuenta</h3>
+
+      <div class="text-sm space-y-1 mb-4">
+        <div class="flex justify-between"><span class="text-cream/60">Subtotal</span><span id="coSubtotal">$0</span></div>
+        <div class="flex justify-between items-center">
+          <span class="text-cream/60">Propina</span>
+          <div class="flex gap-1">
+            <button data-tip="0" class="tipBtn chip">0%</button>
+            <button data-tip="10" class="tipBtn chip">10%</button>
+            <button data-tip="0.1manual" class="chip hidden"></button>
+          </div>
+        </div>
+        <div class="flex justify-between font-semibold text-goldsoft"><span>Total</span><span id="coTotal">$0</span></div>
+      </div>
+
+      <div id="paymentLines" class="space-y-2 mb-3"></div>
+      <button id="addPaymentLine" class="text-xs text-gold/80 hover:text-gold mb-4">+ Agregar método de pago</button>
+
+      <div id="payRemaining" class="text-xs text-cream/60 mb-4"></div>
+
+      <label class="flex items-center gap-2 text-sm text-cream/70 mb-3">
+        <input type="checkbox" id="needsInvoice" /> Requiere factura electrónica DIAN
+      </label>
+      <div id="invoiceFields" class="hidden space-y-2 mb-4">
+        <input type="text" id="invDoc" placeholder="Cédula / NIT" class="input" />
+        <input type="text" id="invName" placeholder="Nombre / Razón social" class="input" />
+        <input type="email" id="invEmail" placeholder="Correo electrónico" class="input" />
+      </div>
+
+      <div class="flex gap-2">
+        <button id="cancelCheckout" class="btn-outline flex-1">Cancelar</button>
+        <button id="confirmCheckout" class="btn-primary flex-1">Confirmar venta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PIN ADMIN (anulaciones / cortesías) -->
+  <div id="modalAdminPin" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
+    <div class="glass rounded-2xl p-6 w-full max-w-xs text-center">
+      <p class="text-sm text-cream/70 mb-3">PIN de administrador requerido</p>
+      <input type="password" id="adminPinInput" maxlength="4" class="input text-center text-2xl tracking-widest" />
+      <div class="flex gap-2 mt-4">
+        <button id="cancelAdminPin" class="btn-outline flex-1">Cancelar</button>
+        <button id="confirmAdminPin" class="btn-primary flex-1">Validar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
