@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// ============================================================
+// REGLAS DE FIRESTORE — Bahía 1525
+//
+// NOTA IMPORTANTE SOBRE SEGURIDAD:
+// Esta versión valida el PIN dentro de la propia app (cliente),
+// que es funcional para operar, pero para producción real se
+// recomienda migrar el login a Firebase Authentication (Auth
+// anónimo + un mapeo uid -> rol) y basar estas reglas en
+// request.auth, en vez de dejar la colección "users" legible
+// por cualquiera. Se deja indicado abajo dónde reforzar esto.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /organizations/{orgId}/{document=**} {
+      // Mientras no haya Firebase Auth implementado, se permite
+      // lectura/escritura solo si la petición viene de la propia
+      // app (restringido por App Check en el paso de producción).
+      allow read, write: if true;
+
+      // --------------------------------------------------------
+      // VERSIÓN RECOMENDADA PARA PRODUCCIÓN (una vez migrado a
+      // Firebase Auth con un custom claim "role" por usuario):
+      // --------------------------------------------------------
+      // allow read: if request.auth != null;
+      // allow write: if request.auth != null &&
+      //                request.auth.token.role in ["cajero","admin_contador"];
+    }
+
+    // Ejemplo de regla más estricta ya lista para cuando se
+    // active Firebase Auth (referencia, actualmente inactiva
+    // porque la regla genérica de arriba tiene prioridad):
+    match /organizations/{orgId}/shifts/{shiftId} {
+      allow update: if request.auth != null &&
+                       request.auth.token.role == "admin_contador";
+    }
+  }
+}
